@@ -1,5 +1,6 @@
-package com.michibaum.evolutionsimulation.brain
+package com.michibaum.evolutionsimulation.utils
 
+import com.michibaum.evolutionsimulation.brain.*
 import kotlin.random.Random
 
 class BrainGenerator {
@@ -33,27 +34,20 @@ class BrainGenerator {
             interneurons = interneurons,
             motorNeurons = motorNeurons,
             senses = senses,
-            actions = actions,
             motorNeuronToActionMapping = motorNeuronToActionMapping
         )
     }
 
     private fun generateRandomSenses(numSenses: Int): List<Sense> {
-        val senseTypes = listOf(
-            { VisionSense() },
-            { HearingSense() },
-            { SmellSense() },
-            { TasteSense() },
-            { TouchSense() }
-        )
+        val senseTypes = allSenses()
         return List(numSenses) { senseTypes.random().invoke() }
     }
 
     private fun generateRandomActions(numActions: Int): List<Action> {
         val actionTypes = listOf(
-            { MovementAction() },
-            { FoodAction() },
-            { DangerAction() }
+            { MoveAction() },
+            { EatAction() },
+            { DangerFleeingAction() }
         )
         return List(numActions) { actionTypes.random().invoke() }
     }

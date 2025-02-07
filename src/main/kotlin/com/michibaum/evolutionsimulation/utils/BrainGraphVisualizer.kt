@@ -1,5 +1,7 @@
-package com.michibaum.evolutionsimulation.brain
+package com.michibaum.evolutionsimulation.utils
 
+import com.michibaum.evolutionsimulation.brain.Brain
+import com.michibaum.evolutionsimulation.brain.Neuron
 import org.jgrapht.graph.DefaultDirectedWeightedGraph
 import org.jgrapht.graph.DefaultWeightedEdge
 import org.jgrapht.nio.Attribute
@@ -13,7 +15,6 @@ class BrainGraphVisualizer {
         // Create the graph
         val graph = DefaultDirectedWeightedGraph<Neuron, DefaultWeightedEdge>(DefaultWeightedEdge::class.java)
 
-        // Map senses and actions to neurons, for detailed visualization
         val sensesToNeurons = brain.sensoryNeurons.zip(brain.senses).toMap()
         val motorNeuronsToActions = brain.motorNeuronToActionMapping
 
@@ -48,26 +49,46 @@ class BrainGraphVisualizer {
                 else -> "UnknownNeuron"
             }
 
+            // Assign colors based on neuron types
+            val color = when (neuronType) {
+                "SensoryNeuron" -> "green"
+                "Interneuron" -> "blue"
+                "MotorNeuron" -> "red"
+                else -> "gray"
+            }
+
             val extraDetails = when {
                 neuron in sensesToNeurons -> "Sense: ${sensesToNeurons[neuron]}"
                 neuron in motorNeuronsToActions -> "Action: ${motorNeuronsToActions[neuron]}"
                 else -> ""
             }
 
+            // Add attributes
             attributes["label"] = DefaultAttribute.createAttribute(
                 "$neuronType\nID: ${neuron.hashCode()}\nActivation: %.2f\n%s".format(
                     neuron.activationValue, extraDetails
                 )
             )
             attributes["type"] = DefaultAttribute.createAttribute(neuronType)
+            attributes["color"] = DefaultAttribute.createAttribute(color) // Specify color
             attributes
         }
 
-        // Add edge attributes (e.g., weights)
+        // Add edge attributes (e.g., weights and colors)
         exporter.setEdgeAttributeProvider { edge ->
             val weight = graph.getEdgeWeight(edge)
+
+            // Determine edge color and thickness based on weight
+            val (color, penwidth) = when {
+                weight > 0.7 -> "red" to "3.0"
+                weight > 0.4 -> "orange" to "2.0"
+                else -> "gray" to "1.0"
+            }
+
             mapOf(
-                "label" to DefaultAttribute.createAttribute("Weight: %.2f".format(weight))
+                "label" to DefaultAttribute.createAttribute("Weight: %.2f".format(weight)),
+                "color" to DefaultAttribute.createAttribute(color),        // Set edge color
+                "penwidth" to DefaultAttribute.createAttribute(penwidth)  // Set edge thickness
             )
         }
 
@@ -75,6 +96,4 @@ class BrainGraphVisualizer {
         exporter.exportGraph(graph, writer)
         return writer.toString()
     }
-
-
 }

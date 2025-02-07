@@ -19,6 +19,7 @@ interface Organism {
         private val visionSense = VisionSense()
         private val smellSense = SmellSense()
         private val touchSense = TouchSense()
+        private val hungerSense = HungerSense()
     }
 
     // Organism consumes energy and ages every tick
@@ -54,8 +55,8 @@ interface Organism {
         // Sense presence of food
         senseData[smellSense] = if (currentTile is EarthTile && currentTile.food != null) 1.0 else 0.0
 
-        // Sense health level
-        senseData[touchSense] = health.toDouble() / 100.0
+        // Sense hunger
+        senseData[hungerSense] = if (energy < 80) 1.0 else 0.0
 
         return senseData
     }
@@ -70,21 +71,24 @@ interface Organism {
 
         for (action in actions) {
             when (action) {
-                is MovementAction -> {
+                is MoveAction -> {
                     val newPosition = determineMovement(world, x, y)
                     totalReward += rewardMovement(newPosition, world) // Add reward for movement
                 }
-                is FoodAction -> {
+                is EatAction -> {
                     val currentTile = world.tiles[x][y]
                     if (currentTile is EarthTile && currentTile.food != null) {
                         eat(currentTile.food!!)
                         currentTile.food = null // Remove food after eating
-                        totalReward += 1.0 // Reward for successfully eating
+                        if (energy > 100)
+                            totalReward -= 0.2
+                        else
+                            totalReward += 1.0 // Reward for successfully eating
                     } else {
                         totalReward -= 10.0 // Penalty for trying to eat without food
                     }
                 }
-                is DangerAction -> {
+                is DangerFleeingAction -> {
                     totalReward += 0.5 // Reward for avoiding danger
                 }
             }
@@ -128,7 +132,7 @@ interface Organism {
         val tile = world.getTileAt(newPosition.first, newPosition.second)
 
         return when (tile) {
-            is EarthTile -> 1.0 // Basic reward for moving to an EarthTile
+            is EarthTile -> 0.0 // Basic reward for moving to an EarthTile
             is WaterTile -> -1.0 // Penalize movement into WaterTile
             is Eatable -> 1.0 // Extra reward for moving closer to food
             else -> 0.0 // Neutral

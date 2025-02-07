@@ -1,7 +1,7 @@
 package com.michibaum.evolutionsimulation
 
 import com.michibaum.evolutionsimulation.brain.Brain
-import com.michibaum.evolutionsimulation.brain.BrainGenerator
+import com.michibaum.evolutionsimulation.utils.BrainGenerator
 import com.michibaum.evolutionsimulation.creatures.LandOrganism
 import com.michibaum.evolutionsimulation.creatures.Organism
 import com.michibaum.evolutionsimulation.landmass.EarthTile

@@ -2,8 +2,14 @@ package com.michibaum.evolutionsimulation.brain
 
 interface Action
 
-class MovementAction : Action
+class MoveAction : Action {
+    override fun toString(): String = "MoveAction"
+}
 
-class FoodAction : Action
+class EatAction : Action {
+    override fun toString(): String = "EatAction"
+}
 
-class DangerAction : Action
+class DangerFleeingAction : Action {
+    override fun toString(): String = "DangerFleeingAction"
+}

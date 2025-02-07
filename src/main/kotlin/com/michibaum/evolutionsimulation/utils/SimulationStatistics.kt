@@ -1,4 +1,4 @@
-package com.michibaum.evolutionsimulation
+package com.michibaum.evolutionsimulation.utils
 
 data class SimulationStatistics(
     val simulationId: Int,
