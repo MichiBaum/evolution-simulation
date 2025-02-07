@@ -90,7 +90,7 @@ class Brain(
             }
 
             // Adjust decay dynamically based on reward feedback
-            motorNeuron.adjustMemoryDecay(increase = reward > 0)
+            motorNeuron.adjustMemoryDecayBasedOnReward(reward = reward)
         }
     }
 

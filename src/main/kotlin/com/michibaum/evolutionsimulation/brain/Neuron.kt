@@ -51,24 +51,18 @@ class Neuron(
     }
 
     /**
-     * Adjusts the memory decay factor of a neuron.
+     * Adjusts the memory decay factor of a neuron based on the reward.
      *
-     * The memory decay influences how much of the previously computed activation value
-     * is retained when calculating the current activation. This method modifies the
-     * decay factor by increasing or decreasing it based on the specified parameter,
-     * while ensuring it remains within the range [0.5, 1.0].
-     *
-     * @param increase A boolean indicating the adjustment direction:
-     *                 - `true`: Increases the memory decay factor, making the neuron retain more of its past state.
-     *                 - `false`: Decreases the memory decay factor, reducing the influence of the past state.
+     * @param reward The reward signal (positive for reinforcing, negative for punishing).
      */
-    fun adjustMemoryDecay(increase: Boolean) {
-        memoryDecay = if (increase) {
-            (memoryDecay + 0.05).coerceAtMost(1.0)
+    fun adjustMemoryDecayBasedOnReward(reward: Double) {
+        memoryDecay = if (reward > 0) {
+            (memoryDecay + 0.01).coerceAtMost(1.0) // Rewarded: retain more memory
         } else {
-            (memoryDecay - 0.05).coerceAtLeast(0.5)
+            (memoryDecay - 0.01).coerceAtLeast(0.5) // Punished: encourage faster forgetting
         }
     }
+
 
 
 }
