@@ -80,19 +80,49 @@ class Brain(
      *                     result in larger updates to the connection weights.
      */
     fun adjustWeightsBasedOnReward(reward: Double, learningRate: Double) {
+        if (reward == 0.0) return // Skip if reward is neutral (avoids unnecessary adjustments)
+
+        // Start from motor neurons and propagate backward:
         motorNeurons.forEach { motorNeuron ->
-            motorNeuron.incomingConnections.forEach { connection ->
-                val deltaReward = reward * connection.from.activationValue * learningRate
-                connection.weight += deltaReward
-
-                val hebbianFactor = connection.from.activationValue * motorNeuron.activationValue
-                connection.weight += learningRate * hebbianFactor
-            }
-
-            // Adjust decay dynamically based on reward feedback
-            motorNeuron.adjustMemoryDecayBasedOnReward(reward = reward)
+            propagateWeightAdjustment(motorNeuron, reward, learningRate, depth = 0)
         }
     }
+
+    /**
+     * Recursively propagate the reward signal backward through the network.
+     *
+     * @param neuron The current neuron being updated.
+     * @param reward The reward signal affecting this neuron.
+     * @param learningRate The adjustment magnitude for weight updates.
+     * @param depth The current recursion depth; affects reward decay for deeper neurons.
+     */
+    private fun propagateWeightAdjustment(
+        neuron: Neuron,
+        reward: Double,
+        learningRate: Double,
+        depth: Int
+    ) {
+        // Iterate through every incoming connection to adjust weights
+        neuron.incomingConnections.forEach { connection ->
+            val sourceNeuron = connection.from
+
+            // Reward scaling based on depth (closer neurons get higher reward)
+            val scaledReward = reward / (depth + 1)
+
+            // Hebbian learning: strengthen connections based on co-activation
+            val activationContribution = sourceNeuron.activationValue
+
+            // Update the connection weight
+            val weightUpdate = learningRate * scaledReward * activationContribution
+            connection.weight += weightUpdate
+
+            // Recursively propagate to the next level (if depth limit isn't reached)
+            if (depth < 10) { // Limit depth to avoid excessive recursion in large networks
+                propagateWeightAdjustment(sourceNeuron, scaledReward, learningRate, depth + 1)
+            }
+        }
+    }
+
 
     /**
      * Removes weak connections from the neurons in the brain whose weights are below the specified threshold.
