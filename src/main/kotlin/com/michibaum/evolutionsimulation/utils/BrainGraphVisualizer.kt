@@ -80,9 +80,10 @@ class BrainGraphVisualizer {
 
             // Determine edge color and thickness based on weight
             val (color, penwidth) = when {
-                weight > 0.7 -> "red" to "3.0"
-                weight > 0.4 -> "orange" to "2.0"
-                else -> "gray" to "1.0"
+                weight < -1 -> "red" to "1.0"
+                weight > 1 -> "green" to "1.0"
+                weight > -1 && weight < 1 -> "blue" to "0.5"
+                else -> "gray" to "0.5"
             }
 
             mapOf(
