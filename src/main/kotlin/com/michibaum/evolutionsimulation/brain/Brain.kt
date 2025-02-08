@@ -32,12 +32,12 @@ class Brain(
         }
 
         // Step 2: Validate that inputs influence interneurons
-        interneurons.forEachIndexed { index, neuron ->
+        interneurons.forEach { neuron ->
             neuron.computeActivation()
         }
 
         // Step 3: Validate that signals propagate to motor neurons
-        motorNeurons.forEachIndexed { index, neuron ->
+        motorNeurons.forEach { neuron ->
             neuron.computeActivation()
         }
     }
@@ -109,6 +109,9 @@ class Brain(
         learningRate: Double,
         depth: Int
     ) {
+        // Update neuron
+        neuron.adjustMemoryDecayBasedOnReward(reward)
+
         // Iterate through every incoming connection to adjust weights
         neuron.incomingConnections.forEach { connection ->
             val sourceNeuron = connection.from

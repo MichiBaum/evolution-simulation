@@ -1,7 +1,7 @@
 package com.michibaum.evolutionsimulation.utils
 
-const val WORLD_SIZE_X: Int = 25
-const val WORLD_SIZE_Y: Int = 25
+const val WORLD_SIZE_X: Int = 20
+const val WORLD_SIZE_Y: Int = 20
 
 const val VEGETABLE_SPAWN_CHANCE: Double = 0.2 // 20% probability
 

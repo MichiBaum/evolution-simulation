@@ -35,7 +35,7 @@ interface Organism {
             health -= 1 // Health decreases when energy runs out
         }
 
-        if (age % 70 == 0) {
+        if (age % 60 == 0) {
             brain.pruneWeakConnections(0.2) // Prune weak connections
             brain.growRandomConnections(10) // Grow random new connections
         }
@@ -83,15 +83,15 @@ interface Organism {
                         eat(currentTile.food!!)
                         currentTile.food = null // Remove food after eating
                         if (energy > 100)
-                            totalReward += 0.4
+                            totalReward += 0.6
                         else
-                            totalReward += 1.0 // Reward for successfully eating
+                            totalReward += 2.0 // Reward for successfully eating
                     } else {
                         totalReward -= 10.0 // Penalty for trying to eat without food
                     }
                 }
                 is DangerFleeingAction -> {
-                    totalReward += 0.5 // Reward for avoiding danger
+//                    totalReward += 0.5 // Reward for avoiding danger
                 }
             }
         }

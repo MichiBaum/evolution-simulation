@@ -35,10 +35,10 @@ class WorldGenerator(){
         val numberOfOrganisms = width * height / 4
         repeat(numberOfOrganisms) {
             val brain = BrainGenerator().generateRandomBrain(
-                numSenses = 4,
-                numActions = 4,
-                numInterneurons = 10,
-                numMotorNeurons = 4
+                numSenses = 5,
+                numActions = 5,
+                numInterneurons = 20,
+                numMotorNeurons = 5
             )
             organisms.add(object : LandOrganism {
                 override val brain: Brain = brain

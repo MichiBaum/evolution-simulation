@@ -1,9 +1,11 @@
 package com.michibaum.evolutionsimulation.brain
 
+import kotlin.math.exp
+
 class Neuron(
     val incomingConnections: MutableList<Connection> = mutableListOf(),
     var activationValue: Double = 0.0, // Output or state of the neuron
-    private var memoryDecay: Double = 0.9, // Decay factor for memory
+    private var memoryDecay: Double = 0.2, // Decay factor for memory
     private val activationFunction: (Double) -> Double = ::sigmoid // Allow dynamic activation function
 
 ) {
@@ -47,7 +49,7 @@ class Neuron(
          * @param x The input value for which the sigmoid function will be computed.
          * @return The result of the sigmoid function applied to the input, ranging between 0 and 1.
          */
-        fun sigmoid(x: Double): Double = 1.0 / (1.0 + Math.exp(-x))
+        fun sigmoid(x: Double): Double = 1.0 / (1.0 + exp(-x))
     }
 
     /**

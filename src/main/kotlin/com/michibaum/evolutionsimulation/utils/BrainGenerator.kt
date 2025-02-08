@@ -52,16 +52,19 @@ class BrainGenerator {
         return List(numActions) { actionTypes.random().invoke() }
     }
 
-    private fun connectNeuronsRandomly(fromNeurons: List<Neuron>, toNeurons: List<Neuron>) {
-        val maxWeight = 0.5 // Lower the maximum weight to reduce random influence
+    private fun connectNeuronsRandomly(fromNeurons: List<Neuron>, toNeurons: List<Neuron>, connectionProbability: Double = 0.3) {
+        val maxWeight = 0.5
         val minWeight = -0.5
         fromNeurons.forEach { from ->
             toNeurons.forEach { to ->
-                val weight = Random.nextDouble(minWeight, maxWeight)
-                val connection = Connection(from = from, to = to, weight = weight)
-                to.incomingConnections.add(connection)
+                if (Random.nextDouble() < connectionProbability) { // Only connect based on probability
+                    val weight = Random.nextDouble(minWeight, maxWeight)
+                    val connection = Connection(from = from, to = to, weight = weight)
+                    to.incomingConnections.add(connection)
+                }
             }
         }
+
     }
 
     private fun createMotorNeuronActionMapping(
