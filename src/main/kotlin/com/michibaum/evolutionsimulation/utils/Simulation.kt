@@ -15,11 +15,8 @@ class Simulation {
     private val world: World = WorldGenerator().generateRandomWorldWithOrganisms(width = WORLD_SIZE_X, height = WORLD_SIZE_Y)
     private val initialOrganisms = world.organisms.size
 
-    init {
-    }
-
     // Function for running a single simulation
-    suspend fun runSimulation(simulationId: Int, maxTicks: Int): SimulationStatistics {
+    fun runSimulation(simulationId: Int, maxTicks: Int): SimulationStatistics {
         var ticks = 0
 
         // Simulate for a given number of ticks or until all organisms are gone
@@ -51,6 +48,8 @@ class Simulation {
 
     // Simulate a single step (tick) in the world
     fun simulate(world: World) {
+        simulateFoodSpawns(world)
+
         // Process each organism's logic
         world.organisms = world.organisms.filter { organism ->
             // Each organism performs its lifecycle actions (sense, act, and interact)
@@ -59,17 +58,15 @@ class Simulation {
                 val (x, y) = position
                 val sensoryInput = organism.sense(world, x, y)
                 organism.brain.processInput(sensoryInput)
-                val reward = organism.act(world, x, y)
-                organism.brain.adjustWeightsBasedOnReward(reward, organism.learningRate)
+                organism.act(world, x, y)
             }
 
             // Organism ages, consumes energy, and dies if health <= 0
             organism.tick()
-            organism.health > 0
+            organism.isAlive()
         }.toMutableList()
 
-        // Simulate food spawning
-        simulateFoodSpawns(world)
+
     }
 
     // Calculate food consumption
@@ -120,8 +117,8 @@ class Simulation {
     fun simulateFoodSpawns(world: World) {
         world.tiles.forEach { row ->
             row.forEach { tile ->
-                if (!tile.hasFood() && Random.nextDouble() < 0.1) {
-                    tile.food = Vegetable() // Spawn vegetables with 10% probability
+                if (!tile.hasFood() && Random.nextDouble() < VEGETABLE_SPAWN_CHANCE) {
+                    tile.food = Vegetable()
                 }
             }
         }

@@ -22,6 +22,8 @@ interface Organism {
         private val hungerSense = HungerSense()
     }
 
+    fun isAlive(): Boolean = health > 0
+
     // Organism consumes energy and ages every tick
     fun tick() {
         energy -= 1 // Energy decreases each tick
@@ -33,9 +35,9 @@ interface Organism {
             health -= 1 // Health decreases when energy runs out
         }
 
-        if (age % 100 == 0) {
-            brain.pruneWeakConnections(0.1) // Prune weak connections
-            brain.growRandomConnections(5) // Grow random new connections
+        if (age % 70 == 0) {
+            brain.pruneWeakConnections(0.2) // Prune weak connections
+            brain.growRandomConnections(10) // Grow random new connections
         }
 
     }
@@ -53,7 +55,7 @@ interface Organism {
         }
 
         // Sense presence of food
-        senseData[smellSense] = if (currentTile is EarthTile && currentTile.food != null) 1.0 else 0.0
+        senseData[smellSense] = if (currentTile is EarthTile && currentTile.food != null) 2.0 else 0.0
 
         // Sense hunger
         senseData[hungerSense] = if (energy < 80) 1.0 else 0.0
@@ -81,7 +83,7 @@ interface Organism {
                         eat(currentTile.food!!)
                         currentTile.food = null // Remove food after eating
                         if (energy > 100)
-                            totalReward -= 0.2
+                            totalReward += 0.4
                         else
                             totalReward += 1.0 // Reward for successfully eating
                     } else {

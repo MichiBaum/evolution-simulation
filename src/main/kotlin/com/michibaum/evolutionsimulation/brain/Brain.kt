@@ -3,7 +3,6 @@ package com.michibaum.evolutionsimulation.brain
 import com.michibaum.evolutionsimulation.utils.CONNECTION_INIT_WEIGHT_MAX
 import com.michibaum.evolutionsimulation.utils.CONNECTION_INIT_WEIGHT_MIN
 import com.michibaum.evolutionsimulation.utils.MOTOR_NEURON_ACTIVATION_THRESHOLD
-import kotlin.math.abs
 import kotlin.random.Random
 
 class Brain(
@@ -80,12 +79,20 @@ class Brain(
      *                     result in larger updates to the connection weights.
      */
     fun adjustWeightsBasedOnReward(reward: Double, learningRate: Double) {
-        if (reward == 0.0) return // Skip if reward is neutral (avoids unnecessary adjustments)
-
-        // Start from motor neurons and propagate backward:
+        if (reward == 0.0) return
         motorNeurons.forEach { motorNeuron ->
-            propagateWeightAdjustment(motorNeuron, reward, learningRate, depth = 0)
+            // Directly adjust motor neuron weights
+            motorNeuron.incomingConnections.forEach { connection ->
+                val error = reward - motorNeuron.activationValue
+                val weightUpdate = learningRate * error * connection.from.activationValue
+                connection.weight = (connection.weight + weightUpdate)
+                    .coerceIn(CONNECTION_INIT_WEIGHT_MIN, CONNECTION_INIT_WEIGHT_MAX)
+            }
+
+            // Propagate reward to earlier neurons
+            propagateWeightAdjustment(motorNeuron, reward, learningRate, depth = 1)
         }
+
     }
 
     /**
@@ -117,7 +124,7 @@ class Brain(
             connection.weight += weightUpdate
 
             // Recursively propagate to the next level (if depth limit isn't reached)
-            if (depth < 10) { // Limit depth to avoid excessive recursion in large networks
+            if (depth < 6) { // Limit depth to avoid excessive recursion in large networks
                 propagateWeightAdjustment(sourceNeuron, scaledReward, learningRate, depth + 1)
             }
         }
@@ -125,22 +132,25 @@ class Brain(
 
 
     /**
-     * Removes weak connections from the neurons in the brain whose weights are below the specified threshold.
+     * Removes weak connections from the neurons in the brain based on a specified threshold.
      *
-     * This method iterates through all neurons (sensory neurons, interneurons, and motor neurons) in the brain
-     * and removes any incoming connections with absolute weights less than the provided threshold. The pruning
-     * of weak connections helps in optimizing the neural network by eliminating insignificant connections.
+     * A weak connection is defined as having an absolute weight below the given threshold.
+     * However, this method ensures that negative weights below the threshold are NOT removed
+     * unless they are very close to zero to preserve inhibitory effects in the neural network.
      *
      * @param threshold The minimum absolute value a connection's weight must have to remain in the network.
-     *                  Connections with weights below this threshold are removed.
+     *                  Connections with weights below this threshold are considered weak and are removed.
      */
     fun pruneWeakConnections(threshold: Double) {
         (sensoryNeurons + interneurons + motorNeurons).forEach { neuron ->
+            // Prune incoming connections
             neuron.incomingConnections.removeIf { connection ->
-                abs(connection.weight) < threshold // Prune low-weight connections
+                // Check if connection weight is weak (near ±0 or below threshold) for removal
+                connection.weight > -threshold && connection.weight < threshold
             }
         }
     }
+
 
     /**
      * Adds a specified number of random connections between neurons within the brain.
