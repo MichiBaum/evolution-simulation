@@ -2,8 +2,8 @@ package com.michibaum.evolutionsimulation.brain
 
 interface Sense
 
-class VisionSense : Sense {
-    override fun toString(): String = "VisionSense"
+class VisionSense(val direction: Direction) : Sense {
+    override fun toString(): String = "VisionSense $direction"
 }
 
 class HearingSense : Sense {
@@ -27,7 +27,10 @@ class HungerSense : Sense {
 }
 
 fun allSenses() : List<() -> Sense> = listOf(
-    { VisionSense() },
+    { VisionSense(Direction.UP) },
+    { VisionSense(Direction.DOWN) },
+    { VisionSense(Direction.LEFT) },
+    { VisionSense(Direction.RIGHT) },
     { HearingSense() },
     { SmellSense() },
     { TasteSense() },

@@ -2,8 +2,11 @@ package com.michibaum.evolutionsimulation.brain
 
 interface Action
 
-class MoveAction : Action {
-    override fun toString(): String = "MoveAction"
+enum class Direction {
+    LEFT, RIGHT, UP, DOWN
+}
+class MoveAction(val direction: Direction) : Action {
+    override fun toString(): String = "MoveAction $direction"
 }
 
 class EatAction : Action {
