@@ -5,7 +5,7 @@ import kotlin.math.exp
 class Neuron(
     val incomingConnections: MutableList<Connection> = mutableListOf(),
     var activationValue: Double = 0.0, // Output or state of the neuron
-    private var memoryDecay: Double = 0.2, // Decay factor for memory
+    private var memoryDecay: Double = 0.1, // Decay factor for memory
     private val activationFunction: (Double) -> Double = ::sigmoid // Allow dynamic activation function
 
 ) {
@@ -52,11 +52,6 @@ class Neuron(
         fun sigmoid(x: Double): Double = 1.0 / (1.0 + exp(-x))
     }
 
-    /**
-     * Adjusts the memory decay factor of a neuron based on the reward.
-     *
-     * @param reward The reward signal (positive for reinforcing, negative for punishing).
-     */
     fun adjustMemoryDecayBasedOnReward(reward: Double) {
         memoryDecay = if (reward > 0) {
             (memoryDecay + 0.01).coerceAtMost(1.0) // Rewarded: retain more memory
@@ -64,7 +59,5 @@ class Neuron(
             (memoryDecay - 0.01).coerceAtLeast(0.5) // Punished: encourage faster forgetting
         }
     }
-
-
 
 }

@@ -35,8 +35,8 @@ interface Organism {
             health -= 1 // Health decreases when energy runs out
         }
 
-        if (age % 60 == 0) {
-            brain.pruneWeakConnections(0.2) // Prune weak connections
+        if (age % 70 == 0) {
+            brain.pruneWeakConnections(0.1) // Prune weak connections
             brain.growRandomConnections(10) // Grow random new connections
         }
 

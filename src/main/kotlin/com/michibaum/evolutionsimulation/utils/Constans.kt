@@ -8,6 +8,8 @@ const val VEGETABLE_SPAWN_CHANCE: Double = 0.2 // 20% probability
 const val MOTOR_NEURON_ACTIVATION_THRESHOLD: Double = 0.6
 const val CONNECTION_INIT_WEIGHT_MIN: Double = -0.5
 const val CONNECTION_INIT_WEIGHT_MAX: Double = 0.5
+const val CONNECTION_WEIGHT_MIN: Double = -5.0
+const val CONNECTION_WEIGHT_MAX: Double = 5.0
 
 const val SIMULATIONS: Int = 1
 const val SIMULATION_MAX_TICKS: Int = 1000

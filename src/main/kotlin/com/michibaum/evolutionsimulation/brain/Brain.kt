@@ -1,8 +1,6 @@
 package com.michibaum.evolutionsimulation.brain
 
-import com.michibaum.evolutionsimulation.utils.CONNECTION_INIT_WEIGHT_MAX
-import com.michibaum.evolutionsimulation.utils.CONNECTION_INIT_WEIGHT_MIN
-import com.michibaum.evolutionsimulation.utils.MOTOR_NEURON_ACTIVATION_THRESHOLD
+import com.michibaum.evolutionsimulation.utils.*
 import kotlin.random.Random
 
 class Brain(
@@ -86,7 +84,7 @@ class Brain(
                 val error = reward - motorNeuron.activationValue
                 val weightUpdate = learningRate * error * connection.from.activationValue
                 connection.weight = (connection.weight + weightUpdate)
-                    .coerceIn(CONNECTION_INIT_WEIGHT_MIN, CONNECTION_INIT_WEIGHT_MAX)
+                    .coerceIn(CONNECTION_WEIGHT_MIN, CONNECTION_WEIGHT_MAX)
             }
 
             // Propagate reward to earlier neurons
@@ -127,7 +125,7 @@ class Brain(
             connection.weight += weightUpdate
 
             // Recursively propagate to the next level (if depth limit isn't reached)
-            if (depth < 6) { // Limit depth to avoid excessive recursion in large networks
+            if (depth < 8) { // Limit depth to avoid excessive recursion in large networks
                 propagateWeightAdjustment(sourceNeuron, scaledReward, learningRate, depth + 1)
             }
         }

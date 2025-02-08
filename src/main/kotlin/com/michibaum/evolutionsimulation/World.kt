@@ -45,7 +45,7 @@ class WorldGenerator(){
                 override var health: Int = 100 // Start with 100 health
                 override var energy: Int = 50  // Start with 50 energy
                 override var age: Int = 0      // Start with age 0
-                override val learningRate: Double = 0.1
+                override val learningRate: Double = 0.2
             })
         }
 
