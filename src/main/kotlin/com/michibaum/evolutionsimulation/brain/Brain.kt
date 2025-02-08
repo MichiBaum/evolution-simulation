@@ -24,20 +24,15 @@ class Brain(
      *                    not included in the map, its activation value is set to 0.0.
      */
     fun processInput(sensoryData: Map<Sense, Double>) {
-        // Step 1: Set sensory activation values
-        sensoryNeurons.forEachIndexed { index, neuron ->
-            neuron.activationValue = sensoryData[senses[index]] ?: 0.0
+        // Ensure sensory neurons correctly receive input
+        sensoryNeurons.forEach { neuron ->
+            neuron.activationValue = sensoryData[senses[sensoryNeurons.indexOf(neuron)]] ?: 0.0
         }
 
-        // Step 2: Validate that inputs influence interneurons
-        interneurons.forEach { neuron ->
-            neuron.computeActivation()
-        }
+        // Propagate activation through the network
+        interneurons.forEach { it.computeActivation() }
+        motorNeurons.forEach { it.computeActivation() }
 
-        // Step 3: Validate that signals propagate to motor neurons
-        motorNeurons.forEach { neuron ->
-            neuron.computeActivation()
-        }
     }
 
 
@@ -62,6 +57,14 @@ class Brain(
         return activatedActions
     }
 
+    fun triggerSingleAction(): Action? {
+        return motorNeuronToActionMapping
+            .maxByOrNull { (neuron, _) -> neuron.activationValue }
+//            ?.takeIf { it.key.activationValue > MOTOR_NEURON_ACTIVATION_THRESHOLD } // Only consider if activation exceeds threshold
+            ?.value
+    }
+
+
     /**
      * Modifies the weights of the connections in motor neurons based on the provided reward and learning rate.
      *
@@ -78,17 +81,18 @@ class Brain(
      */
     fun adjustWeightsBasedOnReward(reward: Double, learningRate: Double) {
         if (reward == 0.0) return
+        val internalReward = reward / 10
         motorNeurons.forEach { motorNeuron ->
             // Directly adjust motor neuron weights
             motorNeuron.incomingConnections.forEach { connection ->
-                val error = reward - motorNeuron.activationValue
+                val error = internalReward - motorNeuron.activationValue
                 val weightUpdate = learningRate * error * connection.from.activationValue
                 connection.weight = (connection.weight + weightUpdate)
                     .coerceIn(CONNECTION_WEIGHT_MIN, CONNECTION_WEIGHT_MAX)
             }
 
             // Propagate reward to earlier neurons
-            propagateWeightAdjustment(motorNeuron, reward, learningRate, depth = 1)
+            propagateWeightAdjustment(motorNeuron, internalReward, learningRate, depth = 1)
         }
 
     }
@@ -115,7 +119,7 @@ class Brain(
             val sourceNeuron = connection.from
 
             // Reward scaling based on depth (closer neurons get higher reward)
-            val scaledReward = reward / (depth + 1)
+            val scaledReward = reward / (depth + 1 / 2.0)
 
             // Hebbian learning: strengthen connections based on co-activation
             val activationContribution = sourceNeuron.activationValue
@@ -142,15 +146,22 @@ class Brain(
      * @param threshold The minimum absolute value a connection's weight must have to remain in the network.
      *                  Connections with weights below this threshold are considered weak and are removed.
      */
-    fun pruneWeakConnections(threshold: Double) {
+    fun pruneWeakConnections(threshold: Double): Int {
+        var prunedCount = 0 // Counter for pruned connections
+
         (sensoryNeurons + interneurons + motorNeurons).forEach { neuron ->
-            // Prune incoming connections
+            // Prune incoming connections and count the removed ones
+            val initialSize = neuron.incomingConnections.size
             neuron.incomingConnections.removeIf { connection ->
-                // Check if connection weight is weak (near ±0 or below threshold) for removal
                 connection.weight > -threshold && connection.weight < threshold
             }
+            val prunedFromNeuron = initialSize - neuron.incomingConnections.size
+            prunedCount += prunedFromNeuron
         }
+
+        return prunedCount // Return the total number of pruned connections
     }
+
 
 
     /**
@@ -172,6 +183,5 @@ class Brain(
             toNeuron.incomingConnections.add(newConnection)
         }
     }
-
 
 }

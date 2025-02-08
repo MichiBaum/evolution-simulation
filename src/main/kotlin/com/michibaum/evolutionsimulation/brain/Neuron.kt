@@ -4,9 +4,9 @@ import kotlin.math.exp
 
 class Neuron(
     val incomingConnections: MutableList<Connection> = mutableListOf(),
-    var activationValue: Double = 0.0, // Output or state of the neuron
-    private var memoryDecay: Double = 0.1, // Decay factor for memory
-    private val activationFunction: (Double) -> Double = ::sigmoid // Allow dynamic activation function
+    var activationValue: Double,
+    private var memoryDecay: Double = 0.1,
+    private val activationFunction: (Double) -> Double = ::sigmoid
 
 ) {
     private var previousActivationValue: Double = 0.0
@@ -50,6 +50,7 @@ class Neuron(
          * @return The result of the sigmoid function applied to the input, ranging between 0 and 1.
          */
         fun sigmoid(x: Double): Double = 1.0 / (1.0 + exp(-x))
+        //other activation functions
     }
 
     fun adjustMemoryDecayBasedOnReward(reward: Double) {

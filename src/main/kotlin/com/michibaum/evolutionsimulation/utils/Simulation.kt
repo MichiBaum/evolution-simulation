@@ -11,18 +11,38 @@ class Simulation {
     private val world: World = WorldGenerator().generateRandomWorldWithOrganisms(width = WORLD_SIZE_X, height = WORLD_SIZE_Y)
     private val initialOrganisms = world.getAllOrganisms().size
 
+    var greatResetHappened = false
+
     // Function for running a single simulation
     fun runSimulation(simulationId: Int, maxTicks: Int): SimulationStatistics {
         var ticks = 0
 
         // Simulate for a given number of ticks or until all organisms are gone
         while (ticks < maxTicks && world.getAllOrganisms().isNotEmpty()) {
-            simulate(world)
+            if (realityKicksIn(ticks) && !greatResetHappened){
+                world.getAllOrganisms().forEach {
+                    it.energy = 60
+                    it.health = 100
+                    it.age = 0
+                }
+                greatResetHappened = true
+            }
+            if (!realityKicksIn(ticks) && ticks % 150 == 0){
+                world.getAllOrganisms().forEach {
+                    it.energy = 60
+                    it.health = 100
+                    it.age = 0
+                }
+            }
+            println("Simulation $simulationId tick $ticks, organisms: ${world.getAllOrganisms().size}")
+            simulate(world, ticks)
             ticks++
         }
 
         for (organism in world.getAllOrganisms()) {
+            println("Organism $simulationId: $organism")
             visualizeBrain(organism)
+            organism.history.forEach { println(it) }
         }
 
         // Collect and return statistics
@@ -43,17 +63,22 @@ class Simulation {
     }
 
     // Simulate a single step (tick) in the world
-    fun simulate(world: World) {
+    fun simulate(world: World, ticks: Int) {
+        removeAllFood(world)
         simulateFoodSpawns(world)
 
         world.getTilesWithOrganisms().forEach { tile ->
             val organism = tile.organism!!
             val sensoryInput = organism.sense(world, tile)
             organism.brain.processInput(sensoryInput)
-            organism.act(world, tile)
-            organism.tick()
-            if (!organism.isAlive()) {
-                tile.organism = null
+            organism.act(world, tile, ticks)
+        }
+    }
+
+    private fun removeAllFood(world: World) {
+        world.tiles.forEach { row ->
+            row.forEach { tile ->
+                tile.food = null
             }
         }
     }

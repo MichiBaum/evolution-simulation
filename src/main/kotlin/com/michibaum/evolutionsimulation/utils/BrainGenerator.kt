@@ -6,8 +6,6 @@ import kotlin.random.Random
 class BrainGenerator {
 
     fun generateRandomBrain(
-        numSenses: Int,
-        numActions: Int,
         numInterneurons: Int,
         numMotorNeurons: Int
     ): Brain {
@@ -15,9 +13,9 @@ class BrainGenerator {
         val actions = createActions()
 
         // Create neurons
-        val sensoryNeurons = (1..senses.size).map { Neuron() } // Match the size of senses
-        val interneurons = (1..numInterneurons).map { Neuron() }
-        val motorNeurons = (1..numMotorNeurons).map { Neuron() }
+        val sensoryNeurons = (1..senses.size).map { Neuron(activationValue = 0.2) } // Match the size of senses
+        val interneurons = (1..numInterneurons).map { Neuron(activationValue = 0.2) }
+        val motorNeurons = (1..numMotorNeurons).map { Neuron(activationValue = 0.2) }
 
         // Create random actions
 

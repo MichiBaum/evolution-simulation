@@ -10,8 +10,8 @@ class HearingSense : Sense {
     override fun toString(): String = "HearingSense"
 }
 
-class SmellSense : Sense {
-    override fun toString(): String = "SmellSense"
+class SmellSense(val direction: Direction?) : Sense {
+    override fun toString(): String = "SmellSense $direction"
 }
 
 class TasteSense : Sense {
@@ -26,14 +26,23 @@ class HungerSense : Sense {
     override fun toString(): String = "HungerSense"
 }
 
+class HealthSense : Sense {
+    override fun toString(): String = "HealthSense"
+}
+
 fun allSenses() : List<() -> Sense> = listOf(
     { VisionSense(Direction.UP) },
     { VisionSense(Direction.DOWN) },
     { VisionSense(Direction.LEFT) },
     { VisionSense(Direction.RIGHT) },
     { HearingSense() },
-    { SmellSense() },
+    { SmellSense(null) },
+    { SmellSense(Direction.UP) },
+    { SmellSense(Direction.DOWN) },
+    { SmellSense(Direction.LEFT) },
+    { SmellSense(Direction.RIGHT) },
     { TasteSense() },
     { TouchSense() },
-    { HungerSense() }
+    { HungerSense() },
+    { HealthSense() }
 )

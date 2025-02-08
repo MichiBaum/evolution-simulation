@@ -36,6 +36,46 @@ data class World (
 
 class WorldGenerator(){
 
+    fun generateRandomWorld(width: Int, height: Int, organisms: List<Organism>): World {
+        val tiles: Array<Array<Tile>> = Array(width) { x ->
+            Array(height) { y ->
+                if (Math.random() < 0.7)
+                    EarthTile(location_x = x, location_y = y)
+                else
+                    WaterTile(location_x = x, location_y = y)
+            }
+        }
+
+        // Get all EarthTiles to assign organisms
+        val earthTiles = tiles.flatten().filterIsInstance<EarthTile>()
+
+        // Create enough unique organisms using deep copies
+        val sufficientOrganisms = generateSufficientOrganisms(organisms, earthTiles.size)
+
+        // Shuffle organisms for randomness
+        val shuffledOrganisms = sufficientOrganisms.shuffled()
+
+        // Assign organisms to EarthTiles
+        earthTiles.zip(shuffledOrganisms).forEach { (tile, organism) ->
+            tile.organism = organism
+        }
+
+        return World(tiles)
+    }
+
+    private fun generateSufficientOrganisms(originalOrganisms: List<Organism>, requiredCount: Int): List<Organism> {
+        val organismCopies = mutableListOf<Organism>()
+
+        // Keep adding deep copies of organisms until we have enough
+        while (organismCopies.size < requiredCount) {
+            organismCopies.addAll(originalOrganisms.map { it })
+        }
+
+        // Trim to the exact required count
+        return organismCopies.take(requiredCount)
+    }
+
+
     fun generateRandomWorldWithOrganisms(width: Int, height: Int): World {
         val tiles: Array<Array<Tile>> = Array(width) { x ->
             Array(height) { y ->
@@ -56,17 +96,16 @@ class WorldGenerator(){
 
     private fun createLandOrganism(): LandOrganism{
         val brain = BrainGenerator().generateRandomBrain(
-            numSenses = 5,
-            numActions = 5,
             numInterneurons = 20,
             numMotorNeurons = 6
         )
         return object : LandOrganism {
             override val brain: Brain = brain
             override var health: Int = 100 // Start with 100 health
-            override var energy: Int = 50  // Start with 50 energy
+            override var energy: Int = 60  // Start with 50 energy
             override var age: Int = 0      // Start with age 0
-            override val learningRate: Double = 0.2
+            override val learningRate: Double = 0.02
+            override val history: MutableMap<Int, String> = mutableMapOf()
         }
     }
 

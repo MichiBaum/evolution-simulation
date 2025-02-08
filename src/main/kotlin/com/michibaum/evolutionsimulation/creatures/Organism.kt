@@ -6,9 +6,11 @@ import com.michibaum.evolutionsimulation.food.Eatable
 import com.michibaum.evolutionsimulation.landmass.EarthTile
 import com.michibaum.evolutionsimulation.landmass.Tile
 import com.michibaum.evolutionsimulation.landmass.WaterTile
+import com.michibaum.evolutionsimulation.utils.realityKicksIn
 
 interface Organism {
 
+    val history: MutableMap<Int, String>
     val brain: Brain
 
     var health: Int
@@ -21,15 +23,20 @@ interface Organism {
         private val visionSenseDown = VisionSense(Direction.DOWN)
         private val visionSenseLeft = VisionSense(Direction.LEFT)
         private val visionSenseRight = VisionSense(Direction.RIGHT)
-        private val smellSense = SmellSense()
+        private val smellSense = SmellSense(null)
+        private val smellSenseRight = SmellSense(Direction.RIGHT)
+        private val smellSenseUp = SmellSense(Direction.UP)
+        private val smellSenseDown = SmellSense(Direction.DOWN)
+        private val smellSenseLeft = SmellSense(Direction.LEFT)
         private val touchSense = TouchSense()
         private val hungerSense = HungerSense()
+        private val healthSense = HealthSense()
     }
 
     fun isAlive(): Boolean = health > 0
 
     // Organism consumes energy and ages every tick
-    fun tick() {
+    fun timeGoesOn() {
         energy -= 1 // Energy decreases each tick
         age += 1  // Age increases each tick
 
@@ -37,11 +44,6 @@ interface Organism {
         if (energy <= 0) {
             energy = 0
             health -= 1 // Health decreases when energy runs out
-        }
-
-        if (age % 70 == 0) {
-            brain.pruneWeakConnections(0.1) // Prune weak connections
-            brain.growRandomConnections(10) // Grow random new connections
         }
 
     }
@@ -82,20 +84,59 @@ interface Organism {
 
 
         // Sense presence of food
-        senseData[smellSense] = if (currentTile is EarthTile && currentTile.food != null) 2.0 else 0.0
+        for (direction in listOf(smellSense, smellSenseUp, smellSenseDown, smellSenseLeft, smellSenseRight)) {
+            when (direction.direction) {
+                Direction.LEFT -> {
+                    val wrappedX = wrapCoordinate(currentTile.location_x - 1, maxX)
+                    senseData[direction] = if (world.tiles[wrappedX][currentTile.location_y] is EarthTile) 1.0 else 0.0
+                }
+                Direction.RIGHT -> {
+                    val wrappedX = wrapCoordinate(currentTile.location_x + 1, maxX)
+                    senseData[direction] = if (world.tiles[wrappedX][currentTile.location_y] is EarthTile) 1.0 else 0.0
+                }
+                Direction.UP -> {
+                    val wrappedY = wrapCoordinate(currentTile.location_y - 1, maxY)
+                    senseData[direction] = if (world.tiles[currentTile.location_x][wrappedY] is EarthTile) 1.0 else 0.0
+                }
+                Direction.DOWN -> {
+                    val wrappedY = wrapCoordinate(currentTile.location_y + 1, maxY)
+                    senseData[direction] = if (world.tiles[currentTile.location_x][wrappedY] is EarthTile) 1.0 else 0.0
+                }
+                null -> senseData[direction] = if (currentTile is EarthTile && currentTile.food != null) 1.0 else 0.0
+            }
+        }
 
         // Sense hunger
-        senseData[hungerSense] = if (energy < 80) 1.0 else 0.0
+        senseData[hungerSense] = if (energy < 60) -20.0 else 1.0
+
+        // Sense health
+        senseData[healthSense] = calculateHealthSense()
 
         return senseData
     }
 
+    fun calculateHealthSense(): Double{
+        return when {
+            energy > 60 -> 1.5
+            energy > 20 -> 1.0
+            health <= 0 -> -10.0
+            else -> 0.0
+        }
+    }
+
     // Perform actions and learn
-    fun act(world: World, currentTile: Tile): Double { // Return the cumulative reward for this cycle
-        val actions = brain.triggerActions()
+    fun act(world: World, currentTile: Tile, ticks: Int): Double { // Return the cumulative reward for this cycle
+//        val actions = brain.triggerActions()
+        val actions = listOfNotNull(brain.triggerSingleAction())
+
         var totalReward = 0.0
 
         var newMovePosition: Pair<Int, Int>? = null
+        if (realityKicksIn(ticks)) {
+            val organism = currentTile.organism
+            history[ticks] =
+                "Creature -> Health: ${organism?.health} Energy: ${organism?.energy} Actions: $actions      Tile has food: ${currentTile.hasFood()}"
+        }
 
         for (action in actions) {
             when (action) {
@@ -103,18 +144,20 @@ interface Organism {
                     newMovePosition = determineMovement(world, currentTile.location_x, currentTile.location_y, action.direction)
                     totalReward += rewardMovement(newMovePosition, world) // Add reward for movement
                 }
+
                 is EatAction -> {
                     if (currentTile is EarthTile && currentTile.food != null) {
                         eat(currentTile.food!!)
                         currentTile.food = null // Remove food after eating
                         if (energy > 100)
-                            totalReward -= 0.5
+                            totalReward -= 1.0
                         else
-                            totalReward += 2.0 // Reward for successfully eating
+                            totalReward += 3.0 // Reward for successfully eating
                     } else {
-                        totalReward -= 10.0 // Penalty for trying to eat without food
+                        totalReward -= 20.0 // Penalty for trying to eat without food
                     }
                 }
+
                 is DangerFleeingAction -> {
 //                    totalReward += 0.5 // Reward for avoiding danger
                 }
@@ -124,8 +167,25 @@ interface Organism {
         // Teach the brain based on the accumulated reward
         brain.adjustWeightsBasedOnReward(totalReward, learningRate)
 
-        if(newMovePosition != null)
+        if (newMovePosition != null)
             moveCreature(world, currentTile, newMovePosition)
+
+        timeGoesOn()
+
+        if (realityKicksIn(ticks)){
+            if (!isAlive()) {
+                if (newMovePosition != null) {
+                    world.setOrganismAt(newMovePosition.first, newMovePosition.second, null)
+                } else {
+                    currentTile.organism = null
+                }
+            }
+        }
+
+        if (ticks % 50 == 0) {
+            val pruned = brain.pruneWeakConnections(0.2) // Prune weak connections
+            brain.growRandomConnections(pruned) // Grow random new connections
+        }
 
         return totalReward
     }
@@ -170,7 +230,7 @@ interface Organism {
         }
 
         if (tile is EarthTile) {
-            reward += 0.5
+            reward += 0.2
             if (tile.food != null) {
                 reward += 0.5
             }
