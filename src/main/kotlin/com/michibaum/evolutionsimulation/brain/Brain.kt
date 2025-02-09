@@ -1,5 +1,7 @@
 package com.michibaum.evolutionsimulation.brain
 
+import com.michibaum.evolutionsimulation.brain.actions.Action
+import com.michibaum.evolutionsimulation.brain.senses.Sense
 import com.michibaum.evolutionsimulation.utils.*
 import kotlin.random.Random
 

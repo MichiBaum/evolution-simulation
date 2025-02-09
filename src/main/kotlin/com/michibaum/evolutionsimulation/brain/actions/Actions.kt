@@ -1,4 +1,4 @@
-package com.michibaum.evolutionsimulation.brain
+package com.michibaum.evolutionsimulation.brain.actions
 
 interface Action
 

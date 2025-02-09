@@ -1,6 +1,9 @@
 package com.michibaum.evolutionsimulation.utils
 
 import com.michibaum.evolutionsimulation.brain.*
+import com.michibaum.evolutionsimulation.brain.actions.*
+import com.michibaum.evolutionsimulation.brain.senses.Sense
+import com.michibaum.evolutionsimulation.brain.senses.allSenses
 import kotlin.random.Random
 
 class BrainGenerator {

@@ -12,7 +12,7 @@ class Neuron(
     val incomingConnections: MutableList<Connection> = mutableListOf(),
     var activationValue: Double,
     private var memoryDecay: Double = NEURON_MEMORY_DECAY,
-    private val activationFunction: (Double) -> Double = ::relu
+    private val activationFunction: (Double) -> Double = ::gelu
 
 ) {
     private var previousActivationValue: Double = 0.0

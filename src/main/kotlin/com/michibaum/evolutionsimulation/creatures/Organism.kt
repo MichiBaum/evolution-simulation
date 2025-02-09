@@ -2,6 +2,11 @@ package com.michibaum.evolutionsimulation.creatures
 
 import com.michibaum.evolutionsimulation.World
 import com.michibaum.evolutionsimulation.brain.*
+import com.michibaum.evolutionsimulation.brain.actions.DangerFleeingAction
+import com.michibaum.evolutionsimulation.brain.actions.Direction
+import com.michibaum.evolutionsimulation.brain.actions.EatAction
+import com.michibaum.evolutionsimulation.brain.actions.MoveAction
+import com.michibaum.evolutionsimulation.brain.senses.*
 import com.michibaum.evolutionsimulation.food.Eatable
 import com.michibaum.evolutionsimulation.landmass.EarthTile
 import com.michibaum.evolutionsimulation.landmass.Tile
@@ -15,24 +20,15 @@ interface Organism {
     val id: UUID
     val brain: Brain
 
+    val senses: List<Sense>
+
     var health: Int
     var energy: Int
     var age: Int
     val learningRate: Double // Learning rate for weight adjustment
 
     companion object {
-        private val visionSenseUp = VisionSense(Direction.UP)
-        private val visionSenseDown = VisionSense(Direction.DOWN)
-        private val visionSenseLeft = VisionSense(Direction.LEFT)
-        private val visionSenseRight = VisionSense(Direction.RIGHT)
-        private val smellSense = SmellSense(null)
-        private val smellSenseRight = SmellSense(Direction.RIGHT)
-        private val smellSenseUp = SmellSense(Direction.UP)
-        private val smellSenseDown = SmellSense(Direction.DOWN)
-        private val smellSenseLeft = SmellSense(Direction.LEFT)
-        private val touchSense = TouchSense()
-        private val hungerSense = HungerSense()
-        private val healthSense = HealthSense()
+
     }
 
     fun isAlive(): Boolean = health > 0
@@ -54,76 +50,11 @@ interface Organism {
     fun sense(world: World, currentTile: Tile): Map<Sense, Double> {
         val senseData = mutableMapOf<Sense, Double>()
 
-        // Sense tile type (e.g., Earth or Water)
-
-        // Helper function to wrap coordinates
-        fun wrapCoordinate(coord: Int, max: Int): Int = (coord + max) % max
-
-        val maxX = world.tiles.size  // Width of the world
-        val maxY = world.tiles[0].size  // Height of the world
-
-        // Sense tile type (e.g., Earth or Water)
-        for (direction in listOf(visionSenseUp, visionSenseDown, visionSenseLeft, visionSenseRight)) {
-            when (direction.direction) {
-                Direction.LEFT -> {
-                    val wrappedX = wrapCoordinate(currentTile.location_x - 1, maxX)
-                    senseData[direction] = if (world.tiles[wrappedX][currentTile.location_y] is EarthTile) 1.0 else 0.0
-                }
-                Direction.RIGHT -> {
-                    val wrappedX = wrapCoordinate(currentTile.location_x + 1, maxX)
-                    senseData[direction] = if (world.tiles[wrappedX][currentTile.location_y] is EarthTile) 1.0 else 0.0
-                }
-                Direction.UP -> {
-                    val wrappedY = wrapCoordinate(currentTile.location_y - 1, maxY)
-                    senseData[direction] = if (world.tiles[currentTile.location_x][wrappedY] is EarthTile) 1.0 else 0.0
-                }
-                Direction.DOWN -> {
-                    val wrappedY = wrapCoordinate(currentTile.location_y + 1, maxY)
-                    senseData[direction] = if (world.tiles[currentTile.location_x][wrappedY] is EarthTile) 1.0 else 0.0
-                }
-            }
+        senses.forEach { sense ->
+            senseData[sense] = sense.calc(world, organism = this, currentTile = currentTile)
         }
-
-
-        // Sense presence of food
-        for (direction in listOf(smellSense, smellSenseUp, smellSenseDown, smellSenseLeft, smellSenseRight)) {
-            when (direction.direction) {
-                Direction.LEFT -> {
-                    val wrappedX = wrapCoordinate(currentTile.location_x - 1, maxX)
-                    senseData[direction] = if (world.tiles[wrappedX][currentTile.location_y] is EarthTile) 1.0 else 0.0
-                }
-                Direction.RIGHT -> {
-                    val wrappedX = wrapCoordinate(currentTile.location_x + 1, maxX)
-                    senseData[direction] = if (world.tiles[wrappedX][currentTile.location_y] is EarthTile) 1.0 else 0.0
-                }
-                Direction.UP -> {
-                    val wrappedY = wrapCoordinate(currentTile.location_y - 1, maxY)
-                    senseData[direction] = if (world.tiles[currentTile.location_x][wrappedY] is EarthTile) 1.0 else 0.0
-                }
-                Direction.DOWN -> {
-                    val wrappedY = wrapCoordinate(currentTile.location_y + 1, maxY)
-                    senseData[direction] = if (world.tiles[currentTile.location_x][wrappedY] is EarthTile) 1.0 else 0.0
-                }
-                null -> senseData[direction] = if (currentTile is EarthTile && currentTile.food != null) 1.0 else 0.0
-            }
-        }
-
-        // Sense hunger
-        senseData[hungerSense] = if (energy < 60) -20.0 else 1.0
-
-        // Sense health
-        senseData[healthSense] = calculateHealthSense()
 
         return senseData
-    }
-
-    fun calculateHealthSense(): Double{
-        return when {
-            energy > 60 -> 1.5
-            energy > 20 -> 1.0
-            health <= 0 -> -10.0
-            else -> 0.0
-        }
     }
 
     // Perform actions and learn

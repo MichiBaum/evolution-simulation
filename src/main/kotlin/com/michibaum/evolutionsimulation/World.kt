@@ -1,6 +1,8 @@
 package com.michibaum.evolutionsimulation
 
 import com.michibaum.evolutionsimulation.brain.Brain
+import com.michibaum.evolutionsimulation.brain.actions.Direction
+import com.michibaum.evolutionsimulation.brain.senses.*
 import com.michibaum.evolutionsimulation.utils.BrainGenerator
 import com.michibaum.evolutionsimulation.creatures.LandOrganism
 import com.michibaum.evolutionsimulation.creatures.Organism
@@ -116,6 +118,19 @@ class WorldGenerator(){
         )
         return object : LandOrganism {
             override val brain: Brain = brain
+            override val senses: List<Sense> = listOf(
+                VisionSense(Direction.UP),
+                VisionSense(Direction.DOWN),
+                VisionSense(Direction.LEFT),
+                VisionSense(Direction.RIGHT),
+                SmellSense(null),
+                SmellSense(Direction.RIGHT),
+                SmellSense(Direction.UP),
+                SmellSense(Direction.DOWN),
+                SmellSense(Direction.LEFT),
+                HungerSense(),
+                HealthSense()
+            )
             override var health: Int = ORGANISM_INIT_HEALTH // Start with 100 health
             override var energy: Int = ORGANISM_INIT_ENERGY  // Start with 50 energy
             override var age: Int = 0      // Start with age 0
