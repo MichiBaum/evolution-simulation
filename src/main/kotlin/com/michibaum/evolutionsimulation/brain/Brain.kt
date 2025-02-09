@@ -60,7 +60,7 @@ class Brain(
     fun triggerSingleAction(): Action? {
         return motorNeuronToActionMapping
             .maxByOrNull { (neuron, _) -> neuron.activationValue }
-//            ?.takeIf { it.key.activationValue > MOTOR_NEURON_ACTIVATION_THRESHOLD } // Only consider if activation exceeds threshold
+            ?.takeIf { it.key.activationValue > MOTOR_NEURON_ACTIVATION_THRESHOLD } // Only consider if activation exceeds threshold
             ?.value
     }
 
@@ -81,18 +81,17 @@ class Brain(
      */
     fun adjustWeightsBasedOnReward(reward: Double, learningRate: Double) {
         if (reward == 0.0) return
-        val internalReward = reward / 10
         motorNeurons.forEach { motorNeuron ->
             // Directly adjust motor neuron weights
             motorNeuron.incomingConnections.forEach { connection ->
-                val error = internalReward - motorNeuron.activationValue
+                val error = reward - motorNeuron.activationValue
                 val weightUpdate = learningRate * error * connection.from.activationValue
                 connection.weight = (connection.weight + weightUpdate)
                     .coerceIn(CONNECTION_WEIGHT_MIN, CONNECTION_WEIGHT_MAX)
             }
 
             // Propagate reward to earlier neurons
-            propagateWeightAdjustment(motorNeuron, internalReward, learningRate, depth = 1)
+            propagateWeightAdjustment(motorNeuron, reward, learningRate, depth = 1)
         }
 
     }
@@ -129,7 +128,7 @@ class Brain(
             connection.weight += weightUpdate
 
             // Recursively propagate to the next level (if depth limit isn't reached)
-            if (depth < 8) { // Limit depth to avoid excessive recursion in large networks
+            if (depth < BRAIN_NEURON_LEARN_DEPTH) { // Limit depth to avoid excessive recursion in large networks
                 propagateWeightAdjustment(sourceNeuron, scaledReward, learningRate, depth + 1)
             }
         }

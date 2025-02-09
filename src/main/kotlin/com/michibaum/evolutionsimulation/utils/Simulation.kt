@@ -9,37 +9,28 @@ import kotlin.random.Random
 class Simulation {
 
     private val world: World = WorldGenerator().generateRandomWorldWithOrganisms(width = WORLD_SIZE_X, height = WORLD_SIZE_Y)
-    private val initialOrganisms = world.getAllOrganisms().size
+    private val initialOrganismsSize = world.getAllOrganisms().size
 
-    var greatResetHappened = false
+    private var greatResetHappened = false
 
     // Function for running a single simulation
     fun runSimulation(simulationId: Int, maxTicks: Int): SimulationStatistics {
         var ticks = 0
 
+        var lastOrganismsAlife = mutableListOf<Organism>()
+
         // Simulate for a given number of ticks or until all organisms are gone
         while (ticks < maxTicks && world.getAllOrganisms().isNotEmpty()) {
-            if (realityKicksIn(ticks) && !greatResetHappened){
-                world.getAllOrganisms().forEach {
-                    it.energy = 60
-                    it.health = 100
-                    it.age = 0
-                }
-                greatResetHappened = true
+            if (greatResetHappened) {
+                lastOrganismsAlife = world.getAllOrganisms().toMutableList()
             }
-            if (!realityKicksIn(ticks) && ticks % 150 == 0){
-                world.getAllOrganisms().forEach {
-                    it.energy = 60
-                    it.health = 100
-                    it.age = 0
-                }
-            }
+            resets(ticks)
             println("Simulation $simulationId tick $ticks, organisms: ${world.getAllOrganisms().size}")
             simulate(world, ticks)
             ticks++
         }
 
-        for (organism in world.getAllOrganisms()) {
+        for (organism in lastOrganismsAlife) {
             println("Organism $simulationId: $organism")
             visualizeBrain(organism)
             organism.history.forEach { println(it) }
@@ -49,11 +40,29 @@ class Simulation {
         return SimulationStatistics(
             simulationId = simulationId,
             ticks = ticks,
-            initialOrganisms = initialOrganisms,
+            initialOrganisms = initialOrganismsSize,
             finalOrganisms = world.getAllOrganisms().size,
             totalFoodConsumed = trackFoodConsumption(world),
             averageEnergy = calculateAverageEnergy(world)
         )
+    }
+
+    private fun resets(ticks: Int) {
+        if (realityKicksIn(ticks) && !greatResetHappened) {
+            world.getAllOrganisms().forEach {
+                it.energy = ORGANISM_INIT_ENERGY
+                it.health = ORGANISM_INIT_HEALTH
+                it.age = 0
+            }
+            greatResetHappened = true
+        }
+        if (!realityKicksIn(ticks) && ticks % 200 == 0) {
+            world.getAllOrganisms().forEach {
+                it.energy = ORGANISM_INIT_ENERGY
+                it.health = ORGANISM_INIT_HEALTH
+                it.age = 0
+            }
+        }
     }
 
     fun visualizeBrain(organism: Organism) {
@@ -64,8 +73,10 @@ class Simulation {
 
     // Simulate a single step (tick) in the world
     fun simulate(world: World, ticks: Int) {
-        removeAllFood(world)
-        simulateFoodSpawns(world)
+        if (ticks % FOOD_SPAWN_AFTER_TICKS == 0){
+            removeAllFood(world)
+            simulateFoodSpawns(world)
+        }
 
         world.getTilesWithOrganisms().forEach { tile ->
             val organism = tile.organism!!

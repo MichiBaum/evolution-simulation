@@ -7,10 +7,12 @@ import com.michibaum.evolutionsimulation.landmass.EarthTile
 import com.michibaum.evolutionsimulation.landmass.Tile
 import com.michibaum.evolutionsimulation.landmass.WaterTile
 import com.michibaum.evolutionsimulation.utils.realityKicksIn
+import java.util.UUID
 
 interface Organism {
 
     val history: MutableMap<Int, String>
+    val id: UUID
     val brain: Brain
 
     var health: Int
@@ -164,23 +166,20 @@ interface Organism {
             }
         }
 
+        timeGoesOn()
+
+        if (realityKicksIn(ticks)){
+            if (!isAlive()) {
+                currentTile.organism = null
+                return totalReward
+            }
+        }
+
         // Teach the brain based on the accumulated reward
         brain.adjustWeightsBasedOnReward(totalReward, learningRate)
 
         if (newMovePosition != null)
             moveCreature(world, currentTile, newMovePosition)
-
-        timeGoesOn()
-
-        if (realityKicksIn(ticks)){
-            if (!isAlive()) {
-                if (newMovePosition != null) {
-                    world.setOrganismAt(newMovePosition.first, newMovePosition.second, null)
-                } else {
-                    currentTile.organism = null
-                }
-            }
-        }
 
         if (ticks % 50 == 0) {
             val pruned = brain.pruneWeakConnections(0.2) // Prune weak connections
@@ -191,9 +190,10 @@ interface Organism {
     }
 
     fun moveCreature(world: World, currentTile: Tile, newPosition: Pair<Int, Int>) {
-        val newTile = world.tiles[newPosition.first][newPosition.second]
-        newTile.organism = currentTile.organism
-        currentTile.organism = null
+        currentTile.organism?.let {
+            world.setOrganismAt(currentTile.location_x, currentTile.location_y, it)
+            currentTile.organism = null
+        }
     }
 
     // Determines movement based on environment and returns the new position

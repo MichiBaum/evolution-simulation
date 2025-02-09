@@ -13,9 +13,9 @@ class BrainGenerator {
         val actions = createActions()
 
         // Create neurons
-        val sensoryNeurons = (1..senses.size).map { Neuron(activationValue = 0.2) } // Match the size of senses
-        val interneurons = (1..numInterneurons).map { Neuron(activationValue = 0.2) }
-        val motorNeurons = (1..numMotorNeurons).map { Neuron(activationValue = 0.2) }
+        val sensoryNeurons = (1..senses.size).map { Neuron(activationValue = NEURON_INITIAL_ACTIVATION_VALUE) } // Match the size of senses
+        val interneurons = (1..numInterneurons).map { Neuron(activationValue = NEURON_INITIAL_ACTIVATION_VALUE) }
+        val motorNeurons = (1..numMotorNeurons).map { Neuron(activationValue = NEURON_INITIAL_ACTIVATION_VALUE) }
 
         // Create random actions
 
@@ -45,7 +45,7 @@ class BrainGenerator {
         { DangerFleeingAction() }
     ).map { it.invoke() }
 
-    private fun connectNeuronsRandomly(fromNeurons: List<Neuron>, toNeurons: List<Neuron>, connectionProbability: Double = 0.5) {
+    private fun connectNeuronsRandomly(fromNeurons: List<Neuron>, toNeurons: List<Neuron>, connectionProbability: Double = 0.2) {
         val maxWeight = 0.5
         val minWeight = -0.5
         fromNeurons.forEach { from ->

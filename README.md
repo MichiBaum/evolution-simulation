@@ -1,6 +1,6 @@
 # Evolution Simulation
 
-Just me trying some things with brains and evolution :)
+Just me trying some things with brains and evolution but nothing works :/
 
 
 ## Brainzzz

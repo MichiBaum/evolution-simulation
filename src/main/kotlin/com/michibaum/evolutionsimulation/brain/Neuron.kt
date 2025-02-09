@@ -1,11 +1,14 @@
 package com.michibaum.evolutionsimulation.brain
 
+import com.michibaum.evolutionsimulation.utils.NEURON_MEMORY_DECAY
+import com.michibaum.evolutionsimulation.utils.NEURON_MEMORY_DECAY_INCREASE
+import com.michibaum.evolutionsimulation.utils.NEURON_NEURON_MEMORY_DECAY_MAX
 import kotlin.math.exp
 
 class Neuron(
     val incomingConnections: MutableList<Connection> = mutableListOf(),
     var activationValue: Double,
-    private var memoryDecay: Double = 0.1,
+    private var memoryDecay: Double = NEURON_MEMORY_DECAY,
     private val activationFunction: (Double) -> Double = ::sigmoid
 
 ) {
@@ -55,9 +58,9 @@ class Neuron(
 
     fun adjustMemoryDecayBasedOnReward(reward: Double) {
         memoryDecay = if (reward > 0) {
-            (memoryDecay + 0.01).coerceAtMost(1.0) // Rewarded: retain more memory
+            (memoryDecay + NEURON_MEMORY_DECAY_INCREASE).coerceAtMost(NEURON_NEURON_MEMORY_DECAY_MAX) // Rewarded: retain more memory
         } else {
-            (memoryDecay - 0.01).coerceAtLeast(0.5) // Punished: encourage faster forgetting
+            (memoryDecay - NEURON_MEMORY_DECAY_INCREASE).coerceAtLeast(NEURON_NEURON_MEMORY_DECAY_MAX) // Punished: encourage faster forgetting
         }
     }
 

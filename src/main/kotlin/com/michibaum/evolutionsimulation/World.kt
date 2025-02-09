@@ -7,6 +7,10 @@ import com.michibaum.evolutionsimulation.creatures.Organism
 import com.michibaum.evolutionsimulation.landmass.EarthTile
 import com.michibaum.evolutionsimulation.landmass.Tile
 import com.michibaum.evolutionsimulation.landmass.WaterTile
+import com.michibaum.evolutionsimulation.utils.ORGANISM_INIT_ENERGY
+import com.michibaum.evolutionsimulation.utils.ORGANISM_INIT_HEALTH
+import com.michibaum.evolutionsimulation.utils.ORGANISM_LEARNING_RATE
+import java.util.*
 
 data class World (
     val tiles: Array<Array<Tile>>,
@@ -19,9 +23,20 @@ data class World (
         return tiles[x][y].organism
     }
 
-    fun setOrganismAt(x: Int, y: Int, organism: Organism?) {
-        tiles[x][y].organism = organism
+    fun clearTileOrganism(x: Int, y: Int){
+        tiles[x][y].organism = null
     }
+
+    fun setOrganismAt(x: Int, y: Int, organism: Organism): Boolean {
+        if (tiles[x][y].organism != null) {
+            return false // Movement fails
+        }
+
+        // Otherwise assign
+        tiles[x][y].organism = organism
+        return true
+    }
+
 
     fun getAllOrganisms(): List<Organism> {
         return tiles.flatten().mapNotNull { it.organism }
@@ -89,7 +104,7 @@ class WorldGenerator(){
         return World(tiles)
     }
 
-    private fun landOrganismOrNull() = if (Math.random() < 0.5)
+    private fun landOrganismOrNull() = if (Math.random() < 0.1)
         createLandOrganism()
     else
         null
@@ -101,11 +116,12 @@ class WorldGenerator(){
         )
         return object : LandOrganism {
             override val brain: Brain = brain
-            override var health: Int = 100 // Start with 100 health
-            override var energy: Int = 60  // Start with 50 energy
+            override var health: Int = ORGANISM_INIT_HEALTH // Start with 100 health
+            override var energy: Int = ORGANISM_INIT_ENERGY  // Start with 50 energy
             override var age: Int = 0      // Start with age 0
-            override val learningRate: Double = 0.02
+            override val learningRate: Double = ORGANISM_LEARNING_RATE
             override val history: MutableMap<Int, String> = mutableMapOf()
+            override val id: UUID = UUID.randomUUID()
         }
     }
 
